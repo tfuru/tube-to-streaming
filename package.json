@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
-    "deploy": "cd webapp && npm run build && cd .. && gcloud --quiet app deploy",
+    "publish": "cd webapp && npm run build && cd .. && gcloud --quiet app deploy",
+    "deploy": "gcloud --quiet app deploy",
     "browse": "gcloud app browse"
   },
   "author": "",

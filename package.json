@@ -5,11 +5,14 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "app": "node app.js"
+    "start": "node app.js",
+    "deploy": "gcloud app deploy",
+    "browse": "gcloud app browse"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.17.1",
     "fs": "^0.0.1-security",
     "http": "^0.0.1-security",
     "ytdl-core": "^4.8.3"

@@ -1,6 +1,5 @@
 'use strict';
 
-const http = require('http');
 const ytdl = require('ytdl-core');
 
 const express = require('express');

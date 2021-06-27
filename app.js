@@ -5,9 +5,7 @@ const ytdl = require('ytdl-core');
 const express = require('express');
 const app = express();
 
-app.get('/', (req, res) => {
-  res.send('Tube-To-Streaming');
-});
+app.use(express.static('./webapp/dist'));
 
 app.get('/:videoid', (req, res) => {
   if (req.params.videoid == '' || req.params.videoid == 'favicon.ico') {

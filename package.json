@@ -8,14 +8,18 @@
     "start": "node app.js",
     "publish": "cd webapp && npm run build && cd .. && gcloud --quiet app deploy",
     "deploy": "gcloud --quiet app deploy",
-    "browse": "gcloud app browse"
+    "browse": "gcloud app browse",
+    "logs": "gcloud app logs tail -s default"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
+    "express-response-range": "^0.2.11",
     "fs": "^0.0.1-security",
     "http": "^0.0.1-security",
+    "md5": "^2.3.0",
+    "stream-slice": "^0.1.2",
     "ytdl-core": "^4.8.3"
   }
 }

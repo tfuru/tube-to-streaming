@@ -2,10 +2,55 @@
 
 const ytdl = require('ytdl-core');
 const fs = require('fs');
+const md5 = require('md5');
 const express = require('express');
-const app = express();
+const responseRange = require('express-response-range');
+const slice = require('stream-slice').slice;
 
+const app = express();
 app.use(express.static('./webapp/dist'));
+app.use(responseRange({defaultLimit: 1024 * 1024}));
+
+const mp4response = (path, req, res) => {
+  // console.log('mp4response');
+  console.log(' headers.range', req.headers.range);
+  console.log(' req.range', req.range);
+
+  const stat = fs.statSync(path);
+  const tmpDirFile = fs.createReadStream( path );
+  tmpDirFile.on('error', (error) => {
+      console.error(`${error}`);
+      res.writeHead(500, {'Content-Type' : 'text/plain'});
+      res.write(`500 error ${error}`);
+      res.end();
+  });
+  tmpDirFile.on('end', () => {
+    console.log('end');
+    res.end();
+  });
+
+  if (req.headers.range) {
+    const headers = {
+      'Content-Type': 'video/mp4',
+      'Accept-Ranges': 'bytes',
+      'Content-Range': `bytes ${req.range.offset}-${req.range.offset + req.range.limit - 1}/${stat.size}`,
+      'Content-Length': req.range.limit
+    };
+    console.log('headers', headers);
+    res.writeHead(206, headers);
+    tmpDirFile
+      .pipe(slice(req.range.offset, req.range.offset + req.range.limit))
+      .pipe(res)
+      
+    return;
+  }
+  const headers = {
+    'Content-Type': 'video/mp4',
+    'Content-Length': stat.size
+  }
+  res.writeHead(200, headers);
+  tmpDirFile.pipe(res);
+}
 
 app.get('/:videoid', async (req, res) => {
   if (req.params.videoid == '' || req.params.videoid == 'favicon.ico') {
@@ -14,68 +59,53 @@ app.get('/:videoid', async (req, res) => {
     res.end();
     return;
   }
-  // console.log('req', req.headers);
-  const range = req.headers.range ? req.headers.range.split(/[=-]/) : null;
-  console.log('range', range);
 
-  const info = await ytdl.getInfo(req.params.videoid);
-  const format = ytdl.chooseFormat(info.formats, { quality: 'lowest' });
-  format.hasAudio = true;
-  // console.log('info.formats', info.formats);
-  // console.log('Format found!', format);
+  const md5VideoId = md5(req.params.videoid);
+  const tmpDirFilePath = `/tmp/${md5VideoId}.mp4`;
+  const exists = fs.existsSync(tmpDirFilePath);
 
-  const stream = ytdl(`http://www.youtube.com/watch?v=${req.params.videoid}`, { format: format });
+  console.log('req videoid', req.params.videoid);
 
-  stream.once('progress', (chunkLength, downloaded, total) => {
-    console.log('progress total', total );
-    if (range) {
-      // Range ヘッダーがある場合 iosへの対応
-      const headers = {
-        'Content-Range': `bytes ${range[1]}-${range[2]}/${total}`,
-        'Accept-Ranges': 'bytes',
-        'Content-Type': 'video/mp4',
-        'Content-Length': range[2]
-      };
-      res.writeHead(206, headers);
-      return;
-    }
+  if (exists == true) {
+    // 既にファイルが有った場合
+    mp4response(tmpDirFilePath, req, res);
+  }
+  else {
+    console.log('download videoid', req.params.videoid);
 
-    res.writeHead(200, {
-      'Content-Type': 'video/mp4',
-      'Content-Length': total,
+    // ファイルがダウンロードされてない場合は ダウンロードする
+    const info = await ytdl.getInfo(req.params.videoid);
+    const format = ytdl.chooseFormat(info.formats, { quality: 'lowest' });
+    // console.log('info.formats', info.formats); lowest
+    // console.log('Format found!', format);
+    const stream = ytdl(`http://www.youtube.com/watch?v=${req.params.videoid}`, { format: format });
+    stream.once('progress', (chunkLength, downloaded, total) => {
+      console.log('progress', total);
     });
 
-  });
+    stream.on('data', (chunk) => {
+      console.log('data', chunk.length);
+    });
 
-  stream.on('data', (chunk) => {
-    // console.log('data chunk', chunk );
-    if (range) {
-      res.write(chunk.slice(range[1], range[2]));
-      return;
-    }
-    res.write(chunk);
-  });
+    stream.on('end', () => {
+      console.log('end');
 
-  stream.on('close', () => {
-    console.log('close');
-    res.end();
-  });
+      // ダウンロード終了 レスポンス生成
+      mp4response(tmpDirFilePath, req, res);
+    });
 
-  stream.on('end', () => {
-    console.log('end');
-    res.end();
-  });
+    stream.on('error', err => {
+      console.error(err);
 
-  stream.on('error', err => {
-    console.error(err);
+      console.error(`${error}`);
+      res.writeHead(500, {'Content-Type' : 'text/plain'});
+      res.write(`500 error ${error}`);
+      res.end();      
+    });
 
-    res.writeHead(404, {'Content-Type' : 'text/plain'});
-    res.write('videoid not found');
-    res.end();
-  });
-
-  const devnull = fs.createWriteStream('/dev/null');
-  stream.pipe( devnull );
+    // /temp に mp4 ファイルをダウンロードする
+    stream.pipe( fs.createWriteStream( tmpDirFilePath ) );
+  }
 });
 
 // Listen to the App Engine-specified port, or 8080 otherwise

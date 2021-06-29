@@ -35,11 +35,23 @@
 </style>
 
 <script lang="ts">
-import Vue from "vue";
+import { Component, Vue } from 'vue-property-decorator';
 import store from "@/store";
 
 import firebase from "@/plugins/firebase";
 
+@Component({})
+export default class App extends Vue {
+  isLogin() {
+    return store.getters.isSignIn;
+  }
+
+  clickLogout() {
+    firebase.signOut();
+  }
+}
+
+/*
 export default Vue.extend({
   name: "App",
   data: () => ({
@@ -51,9 +63,9 @@ export default Vue.extend({
     },
   },
   methods: {
-    clickLogout: () => {
-      firebase.signOut();
-    },
+
   },
 });
+*/
+
 </script>

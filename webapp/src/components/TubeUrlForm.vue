@@ -7,7 +7,7 @@
     <div v-if="success.message != ''" class="notification is-primary">
       {{success.message}}
     </div>    
-    <input class="input" type="text" placeholder="例) https://www.youtube.com/watch?v=H_piu9bSNHU&list=RDMM&index=3" v-model="youtube.url" @click="changeYoutubeUrl">
+    <input class="input" type="text" placeholder="例) https://www.youtube.com/watch?v=H_piu9bSNHU&list=RDMM&index=3" v-model="youtube.url" @click="clickYoutubeUrl">
     <button id="btn-set-url" class="button" @click="clickBtnSetUrl">URLを設定する</button>
   </div>
 </template>
@@ -25,7 +25,7 @@ export default Vue.extend({
       message: '',
     },
     youtube: {
-      url: 'https://www.youtube.com/watch?v=H_piu9bSNHU&list=RDMM&index=3',
+      url: 'https://www.youtube.com/watch?v=feSVtC1BSeQ',
       videoid: ''
     }
   }),
@@ -33,8 +33,9 @@ export default Vue.extend({
       console.log("mounted");
   },
   methods: {
-    changeYoutubeUrl() {
-      console.log('changeYoutubeUrl');
+    clickYoutubeUrl(ev: any) {
+      console.log('changeYoutubeUrl');      
+      ev.target.select(); 
 
       this.error.message = '';
       this.success.message = '';
@@ -45,7 +46,7 @@ export default Vue.extend({
       }
     },
     clickBtnSetUrl(ev: any) {
-      console.log('clickBtnSetUrl', ev.target);
+      // console.log('clickBtnSetUrl', ev.target);
       // 処理中 アイコンを追加する
       ev.target.classList.toggle('is-loading');
 

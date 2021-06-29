@@ -16,6 +16,25 @@ const careteTmpDirFilePath = (videoid) => {
   return {path: `/tmp/${identifier}.mp4`, identifier: identifier};
 }
 
+const careteTmpDirLastFilePath = () => {
+  return {path: '/tmp/last.mp4'};
+}
+
+// `/tmp/last.mp4` を 生成する
+const careteTmpDirLastFile = (path) => {
+  return new Promise((resolve, reject) => {
+    const lastFilePath = careteTmpDirLastFilePath();
+    fs.copyFile(path, lastFilePath.path, (err) => {
+      if (err) {
+        // ファイコピーに失敗
+        reject(err);
+        return;
+      }      
+      resolve();
+    });
+  });
+}
+
 const mp4response = (path, req, res) => {
   // console.log('mp4response');
   console.log(' headers.range', req.headers.range);
@@ -89,6 +108,83 @@ const mp4download = async (videoid, path) => {
   });
 }
 
+app.get('/:userid/last', (req, res) => {
+  const lastPath = careteTmpDirLastFilePath();
+  const exists = fs.existsSync(lastPath.path);
+
+  if (exists == true) {
+    // 既にファイルが有った場合
+    mp4response(lastPath.path, req, res);
+  }
+  else {
+    res.writeHead(400, {'Content-Type' : 'text/plain'});
+    res.write(`400 error ${err}`);
+    res.end();
+  }
+});
+
+app.get('/api/convert/last/:videoid', async (req, res) => {
+  if (req.params.videoid == '' || req.params.videoid == 'favicon.ico') {
+    res.writeHead(404, {'Content-Type' : 'text/plain'});
+    res.write('videoid not found');
+    res.end();
+    return;
+  }
+
+  const tmpDirFilePath = careteTmpDirFilePath(req.params.videoid);
+  const exists = fs.existsSync(tmpDirFilePath.path);
+  console.log('req videoid', req.params.videoid);
+
+  if (exists == true) {
+    // 既にファイルが有った場合
+    // last.mp4 を生成する
+    careteTmpDirLastFile(tmpDirFilePath.path)
+      .then(() => {
+        res
+          .status(200)
+          .json({ 
+            status: "success",
+            identifier: tmpDirFilePath.identifier,
+          });
+      })
+      .catch((err) => {
+        res
+          .status(500)
+          .json({status: "error", error: err});
+      });
+  }
+  else {
+    console.log('download videoid', req.params.videoid);
+
+    // YouTubeからのファイルダウンロード処理
+    mp4download(req.params.videoid, tmpDirFilePath.path)
+      .then(() => {
+        // ダウンロード成功
+        // last.mp4 を生成する
+        careteTmpDirLastFile(tmpDirFilePath.path)
+          .then(() => {
+            res
+            .status(200)
+            .json({
+              status: "success",
+              identifier: tmpDirFilePath.identifier
+            });
+          })
+          .catch((err) => {
+            res
+              .status(500)
+              .json({status: "error", error: err});
+          });
+      })
+      .catch((err) => {
+        res
+          .status(500)
+          .json({status: "error", error: err});
+      });
+  }
+});
+
+
 app.get('/:videoid', async (req, res) => {
   if (req.params.videoid == '' || req.params.videoid == 'favicon.ico') {
     res.writeHead(404, {'Content-Type' : 'text/plain'});
@@ -118,43 +214,6 @@ app.get('/:videoid', async (req, res) => {
         res.writeHead(500, {'Content-Type' : 'text/plain'});
         res.write(`500 error ${err}`);
         res.end();  
-      });
-  }
-});
-
-app.get('/api/convert/last/:videoid', async (req, res) => {
-  if (req.params.videoid == '' || req.params.videoid == 'favicon.ico') {
-    res.writeHead(404, {'Content-Type' : 'text/plain'});
-    res.write('videoid not found');
-    res.end();
-    return;
-  }
-
-  const tmpDirFilePath = careteTmpDirFilePath(req.params.videoid);
-  const exists = fs.existsSync(tmpDirFilePath.path);
-  console.log('req videoid', req.params.videoid);
-
-  if (exists == true) {
-    // 既にファイルが有った場合
-    res
-      .status(200)
-      .json({ status: "success" });
-  }
-  else {
-    console.log('download videoid', req.params.videoid);
-
-    // YouTubeからのファイルダウンロード処理
-    mp4download(req.params.videoid, tmpDirFilePath.path)
-      .then(() => {
-        // ダウンロード成功
-        res
-          .status(200)
-          .json({ status: "success" });
-      })
-      .catch((err) => {
-        res
-          .status(500)
-          .json({status: "error", error: err});
       });
   }
 });

@@ -8,8 +8,7 @@ const routes: Array<RouteConfig> = [
   {
     path: '/',
     name: 'Home',
-    component: Home,
-    meta: { title: 'TubeToStreaming', desc: 'YouTube動画を中継するツールをつくってみた' }
+    component: Home
   },
   {
     path: '/about',

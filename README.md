@@ -6,7 +6,7 @@ Unity VideoPlayer で YouTube 動画を再生させるための 中継サーバ�
 下記の環境は動作確認済み
 - Windows
 - Android
-- iOS / M1 mackbook 
+- iOS / M1 macbook 
 
 # 動作環境
 Google App Engine 

@@ -3,7 +3,7 @@
     <section class="section">
       <div class="container">
         <img alt="Vue logo" src="../assets/logo.png" class="logo">
-        <p>ログインして表示されるフォームにYouTubeの動画URLを設定すると cluster ワールド内のスクリーンで再生できるようになります</p>
+        <p>ログインして表示されるフォームにYouTubeの動画URLを設定すると <br /> cluster ワールド内のスクリーンで再生できるようになります</p>
         <p>
           <a href="https://cluster.mu/w/e10c8416-6f4c-4f91-a606-2b07441a0583">YouTube動画を中継するツールをつくってみた</a>
         </p>

@@ -114,7 +114,7 @@ export default Vue.extend({
         .then((resp) => {            
           // 処理中 アイコンを削除
           ev.target.classList.toggle('is-loading');
-          this.success.message = '再生対象の動画が削除されリセットされました。再度、動画を設定してみてください';
+          this.success.message = '再生対象がリセットされました。再度、動画を設定してみてください';
         })
         .catch((e) => {
           this.error.message = e.message;

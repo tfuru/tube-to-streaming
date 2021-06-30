@@ -1,5 +1,15 @@
 runtime: nodejs14
 
-instance_class: B1
-manual_scaling:
-  instances: 1
+instance_class: F1
+automatic_scaling:
+  min_idle_instances: automatic
+  max_idle_instances: 1
+  max_instances: 1
+
+handlers:
+- url: /css
+  static_dir: webapp/dist/css
+- url: /img
+  static_dir: webapp/dist/img
+- url: /js
+  static_dir: webapp/dist/js

@@ -136,6 +136,22 @@ app.get('/:userid/last', (req, res) => {
   }
 });
 
+// ファイル削除 API
+app.get('/:userid/last/delete', (req, res) => {
+  const lastPath = careteTmpDirLastFilePath();
+  const exists = fs.existsSync(lastPath.path);
+
+  if (exists == true) {
+    // 既にファイルが有った場合
+    fs.unlinkSync(lastPath.path);
+  }
+
+  res
+    .status(200)
+    .json({status: "ok", message: "deleted the file.", path: lastPath.path});
+});
+
+// 指定IDの動画を変換
 app.get('/api/convert/last/:videoid', async (req, res) => {
   if (req.params.videoid == '' || req.params.videoid == 'favicon.ico') {
     res.writeHead(404, {'Content-Type' : 'text/plain'});

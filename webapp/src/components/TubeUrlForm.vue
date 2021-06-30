@@ -1,14 +1,40 @@
 <template>
   <div class="container">
-    <h2>YouTubeのURLを設定する</h2>
-    <div v-if="error.message != ''" class="notification is-danger">
-      {{error.message}}
+    <div class="columns">
+      <div class="column">
+        <h2>YouTubeのURLを設定する</h2>
+      </div>
     </div>
-    <div v-if="success.message != ''" class="notification is-primary">
-      {{success.message}}
+    <div class="columns">
+      <div class="column">
+        <div v-if="error.message != ''" class="notification is-danger">
+          {{error.message}}
+        </div>
+      </div>
     </div>    
-    <input class="input" type="text" placeholder="例) https://www.youtube.com/watch?v=H_piu9bSNHU&list=RDMM&index=3" v-model="youtube.url" @click="clickYoutubeUrl">
-    <button id="btn-set-url" class="button" @click="clickBtnSetUrl">URLを設定する</button>
+    <div class="columns">
+      <div class="column">
+        <div v-if="success.message != ''" class="notification is-primary">
+          {{success.message}}
+        </div>
+      </div>
+    </div>    
+
+    <div class="columns">
+      <div class="column">
+        <input class="input" type="text" placeholder="例) https://www.youtube.com/watch?v=H_piu9bSNHU&list=RDMM&index=3" v-model="youtube.url" @click="clickYoutubeUrl">
+      </div>
+    </div>
+    <div class="columns">
+      <div class="column">
+        <button id="btn-set-url" class="button is-primary" @click="clickBtnSetUrl">URLを設定する</button>
+      </div>
+    </div>
+    <div class="columns">
+      <div class="column">
+        <button id="btn-set-url" class="button" @click="clickBtnReset">リセット</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -73,6 +99,22 @@ export default Vue.extend({
           // 処理中 アイコンを削除
           ev.target.classList.toggle('is-loading');
           this.success.message = '動画が設定されました。cluster ワールドで再生してみてください';
+        })
+        .catch((e) => {
+          this.error.message = e.message;
+          // 処理中 アイコンを削除
+          ev.target.classList.toggle('is-loading');
+        });
+    },
+    clickBtnReset(ev: any) {
+      // 処理中 アイコンを追加する
+      ev.target.classList.toggle('is-loading');
+      const userid = 'dummy';
+      this.axios.get(`/${userid}/last/delete`)
+        .then((resp) => {            
+          // 処理中 アイコンを削除
+          ev.target.classList.toggle('is-loading');
+          this.success.message = '再生対象の動画が削除されリセットされました。再度、動画を設定してみてください';
         })
         .catch((e) => {
           this.error.message = e.message;

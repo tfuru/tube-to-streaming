@@ -130,8 +130,8 @@ app.get('/:userid/last', (req, res) => {
     mp4response(lastPath.path, 'video/mp4', req, res);
   }
   else {
-    res.writeHead(400, {'Content-Type' : 'text/plain'});
-    res.write(`400 error ${err}`);
+    res.writeHead(404, {'Content-Type' : 'text/plain'});
+    res.write('Not Found');
     res.end();
   }
 });

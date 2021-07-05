@@ -54,6 +54,7 @@ const mp4response = (path, mime, req, res) => {
   });
 
   if (req.headers.range) {
+    // req.range.limit = 2 の stat.size が 分割ダウンロードサイズ
     const headers = {
       'Content-Type': mime,
       'Accept-Ranges': 'bytes',
@@ -64,8 +65,7 @@ const mp4response = (path, mime, req, res) => {
     res.writeHead(206, headers);
     tmpDirFile
       .pipe(slice(req.range.offset, req.range.offset + req.range.limit))
-      .pipe(res)
-      
+      .pipe(res)    
     return;
   }
   const headers = {

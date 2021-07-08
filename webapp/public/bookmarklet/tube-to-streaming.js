@@ -1,4 +1,4 @@
-async function(){
+javascript:(async () => {
     const url = new URL(window.location);
     const videoid = url.searchParams.get('v')
     console.log('videoid', videoid);
@@ -11,4 +11,4 @@ async function(){
     } else {
         alert('エラーが発生しました');
     }
-}
+})()

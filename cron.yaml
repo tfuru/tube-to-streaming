@@ -1,0 +1,4 @@
+cron:
+#- description: "dummy job"
+#  url: /cron/dummy
+#  schedule: every 24 hours

@@ -1,8 +1,8 @@
 <template>
   <div class="container">
     <div class="columns">
-      <div class="column">
-        <h2>YouTubeのURLを設定する</h2>
+      <div class="column content">
+        <h2 class="subtitle">YouTubeのURLを設定する</h2>
       </div>
     </div>
     <div v-if="error.message != ''" class="columns">

@@ -4,12 +4,14 @@ const ytdl = require('ytdl-core');
 const fs = require('fs');
 const md5 = require('md5');
 const express = require('express');
+const cors = require('cors');
 const responseRange = require('express-response-range');
 const slice = require('stream-slice').slice;
 
 const app = express();
 app.use(express.static('./webapp/dist'));
 app.use(responseRange({defaultLimit: 1024 * 1024}));
+app.use(cors());
 
 const careteTmpDirFilePath = (videoid) => {
   const identifier = md5(videoid);
@@ -244,9 +246,16 @@ app.get('/:videoid', async (req, res) => {
         console.error('mp4download', err);
         res.writeHead(500, {'Content-Type' : 'text/plain'});
         res.write(`500 error ${err}`);
-        res.end();  
+        res.end();
       });
   }
+});
+
+// cron ダミー実行
+app.get('/cron/dummy', (req, res) => {
+  res
+    .status(200)
+    .json({status: "OK"});
 });
 
 // Listen to the App Engine-specified port, or 8080 otherwise

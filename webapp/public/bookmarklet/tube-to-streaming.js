@@ -1,6 +1,12 @@
 javascript:(async () => {
     const url = new URL(window.location);
-    const videoid = url.searchParams.get('v')
+    if (url.searchParams.has('v') == false) {
+        // Vパラメーターがなかった
+        alert('videoid が 抽出できませんでした。URLを確認してください');
+        return null;
+    }
+    const videoid = url.searchParams.get('v');
+    
     console.log('videoid', videoid);
     const apiUrl = `https://tube-to-streaming.an.r.appspot.com/api/convert/last/${videoid}`;
     console.log('apiUrl', apiUrl);

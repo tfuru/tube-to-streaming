@@ -6,7 +6,8 @@
     <h3>使い方</h3>
     <div>
       <ol>
-        <li>ブックマークバー上で右クリックし、新しいブックマークを選択する</li>
+        <li>ブックマークバー上で右クリックし、ブックマークマネージャを開く</li>
+        <li>右クリックし、新しいブックマークを追加する</li>
         <li>名前部分を 動画URL設定 等わかりやすい名前にする</li>
         <li>URL部分に 上のテキストエリアの javascript:(xxxxx) を貼り付ける</li>
         <li>再生したい動画のページを開く</li>
@@ -18,11 +19,18 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
+import store from "@/store";
 
 @Component
 export default class Bookmarklet extends Vue {
-  // default.js を
-  bookmarkletText = "javascript:(function(a){s=document.createElement('script');s.src=a;document.body.appendChild(s)})('https://tube-to-streaming.an.r.appspot.com/bookmarklet/tube-to-streaming.js')";
+  userid = (store.getters.user.isAnonymous == true)? 'dummy' : store.getters.user.uid;
+
+  // default.js を 参考に
+  bookmarkletText = '';
+  
+  mounted(): void {    
+    this.bookmarkletText = `javascript:(function(uid,a){s=document.createElement('script');s.src=a;document.body.appendChild(s);convert(uid);})('${this.userid}','https://tube-to-streaming.an.r.appspot.com/bookmarklet/tube-to-streaming.js')`;
+  }
 
   clickBookmarkletText(ev: any){
     ev.target.select(); 

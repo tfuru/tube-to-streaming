@@ -7,8 +7,9 @@
 // クロージャーコンパイラ
 // https://closure-compiler.appspot.com/home
 
-javascript:(function(url){
+javascript:(function(uid, url){
     s=document.createElement('script');
     s.src=url;
     document.body.appendChild(s);
-})('https://tube-to-streaming.an.r.appspot.com/bookmarklet/tube-to-streaming.js')
+    convert(uid);
+})('dummy', 'https://tube-to-streaming.an.r.appspot.com/bookmarklet/tube-to-streaming.js')

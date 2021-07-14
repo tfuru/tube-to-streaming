@@ -1,7 +1,7 @@
 'use strict';
 
 const ytdl = require('ytdl-core');
-const fs = require('fs');
+const fs = require('fs-extra');
 const md5 = require('md5');
 const express = require('express');
 const cors = require('cors');
@@ -13,19 +13,19 @@ app.use(express.static('./webapp/dist'));
 app.use(responseRange({defaultLimit: 1024 * 1024}));
 app.use(cors());
 
-const careteTmpDirFilePath = (videoid) => {
+const careteTmpDirFilePath = (userid, videoid) => {
   const identifier = md5(videoid);
-  return {path: `/tmp/${identifier}.mp4`, identifier: identifier};
+  return {path: `/tmp/${userid}/${identifier}.mp4`, identifier: identifier};
 }
 
-const careteTmpDirLastFilePath = () => {
-  return {path: '/tmp/last.mp4'};
+const careteTmpDirLastFilePath = (userid) => {
+  return {path: `/tmp/${userid}/last.mp4`};
 }
 
 // `/tmp/last.mp4` を 生成する
-const careteTmpDirLastFile = (path) => {
+const careteTmpDirLastFile = (userid, path) => {
   return new Promise((resolve, reject) => {
-    const lastFilePath = careteTmpDirLastFilePath();
+    const lastFilePath = careteTmpDirLastFilePath(userid);
     fs.copyFile(path, lastFilePath.path, (err) => {
       if (err) {
         // ファイコピーに失敗
@@ -124,7 +124,7 @@ const mp4download = async (videoid, path) => {
 }
 
 app.get('/:userid/last', (req, res) => {
-  const lastPath = careteTmpDirLastFilePath();
+  const lastPath = careteTmpDirLastFilePath(req.params.userid);
   const exists = fs.existsSync(lastPath.path);
 
   if (exists == true) {
@@ -140,7 +140,7 @@ app.get('/:userid/last', (req, res) => {
 
 // ファイル削除 API
 app.get('/:userid/last/delete', (req, res) => {
-  const lastPath = careteTmpDirLastFilePath();
+  const lastPath = careteTmpDirLastFilePath(req.params.userid);
   const exists = fs.existsSync(lastPath.path);
 
   if (exists == true) {
@@ -154,7 +154,7 @@ app.get('/:userid/last/delete', (req, res) => {
 });
 
 // 指定IDの動画を変換
-app.get('/api/convert/last/:videoid', async (req, res) => {
+app.get('/api/convert/last/:userid/:videoid', async (req, res) => {
   if (req.params.videoid == '' || req.params.videoid == 'favicon.ico') {
     res.writeHead(404, {'Content-Type' : 'text/plain'});
     res.write('videoid not found');
@@ -162,14 +162,14 @@ app.get('/api/convert/last/:videoid', async (req, res) => {
     return;
   }
 
-  const tmpDirFilePath = careteTmpDirFilePath(req.params.videoid);
+  const tmpDirFilePath = careteTmpDirFilePath(req.params.userid, req.params.videoid);
   const exists = fs.existsSync(tmpDirFilePath.path);
   console.log('req videoid', req.params.videoid);
 
   if (exists == true) {
     // 既にファイルが有った場合
     // last.mp4 を生成する
-    careteTmpDirLastFile(tmpDirFilePath.path)
+    careteTmpDirLastFile(req.params.userid, tmpDirFilePath.path)
       .then(() => {
         res
           .status(200)
@@ -191,7 +191,7 @@ app.get('/api/convert/last/:videoid', async (req, res) => {
     mp4download(req.params.videoid, tmpDirFilePath.path)
       .then(() => {
         // ダウンロード成功 last.mp4 を生成する
-        careteTmpDirLastFile(tmpDirFilePath.path)
+        careteTmpDirLastFile(req.params.userid, tmpDirFilePath.path)
           .then(() => {
             res
             .status(200)
@@ -217,7 +217,7 @@ app.get('/api/convert/last/:videoid', async (req, res) => {
 });
 
 
-app.get('/:videoid', async (req, res) => {
+app.get('/:userid/:videoid', async (req, res) => {
   if (req.params.videoid == '' || req.params.videoid == 'favicon.ico') {
     res.writeHead(404, {'Content-Type' : 'text/plain'});
     res.write('videoid not found');
@@ -225,7 +225,7 @@ app.get('/:videoid', async (req, res) => {
     return;
   }
 
-  const tmpDirFilePath = careteTmpDirFilePath(req.params.videoid);
+  const tmpDirFilePath = careteTmpDirFilePath(req.params.userid, req.params.videoid);
   const exists = fs.existsSync(tmpDirFilePath.path);
   console.log('req videoid', req.params.videoid);
 

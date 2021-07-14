@@ -16,10 +16,13 @@ app.use(cors());
 const careteTmpDirFilePath = (userid, videoid) => {
   const identifier = md5(videoid);
   fs.mkdirsSync(`/tmp/${userid}`);
+  fs.chmodSync(`/tmp/${userid}`, '0755');
   return {path: `/tmp/${userid}/${identifier}.mp4`, identifier: identifier};
 }
 
 const careteTmpDirLastFilePath = (userid) => {
+  fs.mkdirsSync(`/tmp/${userid}`);
+  fs.chmodSync(`/tmp/${userid}`, '0755');
   return {path: `/tmp/${userid}/last.mp4`};
 }
 

@@ -30,6 +30,13 @@
         </div>
       </div>
     </div>
+    <div v-if="userid != 'dummy'" class="columns">
+      <div class="column content">
+        <h2 class="subtitle">配信URL</h2>
+        <p> ワールドに設置した VideoPlayer に設定するURL</p>
+        <input class="input is-left" type="text" v-model="lastMp4Url" @click="clickLastMp4Url">
+      </div>
+    </div>
   </div>
 </template>
 
@@ -61,12 +68,20 @@ export default class TubeUrlForm extends Vue {
 
   userid = (store.getters.user.isAnonymous == true)? 'dummy' : store.getters.user.uid;
 
+  lastMp4Url = "";
+
   mounted(): void {
-    console.log('currentUser', this.userid);
+    console.log('currentUser', this.userid, location.host);
+    this.lastMp4Url = `${location.origin}/${this.userid}/last`;
+  }
+  
+  clickLastMp4Url(ev: any): void {
+    console.log('changeYoutubeUrl');
+    ev.target.select(); 
   }
 
   clickYoutubeUrl(ev: any): void {
-    console.log('changeYoutubeUrl');      
+    console.log('changeYoutubeUrl');
     ev.target.select(); 
 
     this.error.message = '';

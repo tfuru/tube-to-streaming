@@ -34,6 +34,21 @@ export default Vue.extend({
       tosUrl: "/terms",
       privacyPolicyUrl: "/privacy",
       autoUpgradeAnonymousUsers: true,
+      callbacks: {
+         signInSuccessWithAuthResult: (
+          authResult: any,
+          redirectUrl: string
+        ) => {
+          return true;
+        },
+        signInFailure: async (error: firebaseui.auth.AuthUIError) => {
+          console.warn("signInFailure", error);
+          // 匿名アカウント アップグレード
+          const auth = firebase.auth();
+          const credential = error.credential;
+          const authResult = await auth.signInWithCredential(credential);          
+        }
+      }
     };
     const ui =
       firebaseui.auth.AuthUI.getInstance() ||

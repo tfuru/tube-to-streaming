@@ -15,6 +15,7 @@ app.use(cors());
 
 const careteTmpDirFilePath = (userid, videoid) => {
   const identifier = md5(videoid);
+  fs.mkdirsSync(`/tmp/${userid}`);
   return {path: `/tmp/${userid}/${identifier}.mp4`, identifier: identifier};
 }
 
@@ -22,7 +23,7 @@ const careteTmpDirLastFilePath = (userid) => {
   return {path: `/tmp/${userid}/last.mp4`};
 }
 
-// `/tmp/last.mp4` を 生成する
+// `/tmp/[userid]/last.mp4` を 生成する
 const careteTmpDirLastFile = (userid, path) => {
   return new Promise((resolve, reject) => {
     const lastFilePath = careteTmpDirLastFilePath(userid);

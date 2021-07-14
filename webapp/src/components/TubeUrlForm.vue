@@ -110,7 +110,9 @@ export default class TubeUrlForm extends Vue {
 
     // サーバ側でのダウンロード処理を実行する
     // TODO 進捗を通知する方法が必用そう
-    this.axios.get(`/api/convert/last/${this.userid}/${this.youtube.videoid}`)
+    const convertUrl = `/api/convert/last/${this.userid}/${this.youtube.videoid}`;
+    console.log('convertUrl', convertUrl);
+    this.axios.get(convertUrl)
       .then((resp) => {            
         // 処理中 アイコンを削除
         ev.target.classList.toggle('is-loading');

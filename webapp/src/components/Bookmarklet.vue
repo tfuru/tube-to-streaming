@@ -23,12 +23,12 @@ import store from "@/store";
 
 @Component
 export default class Bookmarklet extends Vue {
-  userid = (store.getters.user.isAnonymous == true)? 'dummy' : store.getters.user.uid;
+  userid = (store.getters.user == null || store.getters.user.isAnonymous == true)? 'dummy' : store.getters.user.uid;
 
   // default.js を 参考に
   bookmarkletText = '';
   
-  mounted(): void {    
+  mounted(): void {
     this.bookmarkletText = `javascript:(function(uid,a){s=document.createElement('script');s.src=a;document.body.appendChild(s);convert(uid);})('${this.userid}','https://tube-to-streaming.an.r.appspot.com/bookmarklet/tube-to-streaming.js')`;
   }
 

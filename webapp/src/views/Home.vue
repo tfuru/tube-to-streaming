@@ -41,7 +41,7 @@ import TubeUrlForm from "@/components/TubeUrlForm.vue";
   },  
 })
 export default class Home extends Vue {
-  isLogin() {
+  isLogin(): boolean {
     const isSignIn = store.getters.isSignIn;
     console.log('isSignIn', isSignIn);
     return isSignIn;

@@ -41,98 +41,102 @@
 </style>
 
 <script lang="ts">
-import Vue from 'vue';
+import { Component, Vue } from 'vue-property-decorator';
+import store from "@/store";
 
-export default Vue.extend({
-  name: 'TubeUrlForm',
-  data: () => ({
-    error: {
-      message: '',
-    },
-    success: {
-      message: '',
-    },
-    youtube: {
-      url: 'https://youtu.be/feSVtC1BSeQ',
-      videoid: ''
+@Component({})
+export default class TubeUrlForm extends Vue {
+  error = {
+    message: '',
+  };
+
+  success = {
+    message: '',
+  };
+
+  youtube = {
+    url: 'https://youtu.be/feSVtC1BSeQ',
+    videoid: ''
+  };
+
+  userid = (store.getters.user.isAnonymous == true)? 'dummy' : store.getters.user.uid;
+
+  mounted(): void {
+    console.log('currentUser', this.userid);
+  }
+
+  clickYoutubeUrl(ev: any): void {
+    console.log('changeYoutubeUrl');      
+    ev.target.select(); 
+
+    this.error.message = '';
+    this.success.message = '';
+
+    const target = document.getElementById('btn-set-url');
+    if (target) {
+      target.classList.remove('is-loading');
     }
-  }),
-  mounted: () => {
-      console.log("mounted");
-  },
-  methods: {
-    clickYoutubeUrl(ev: any) {
-      console.log('changeYoutubeUrl');      
-      ev.target.select(); 
+  }
 
-      this.error.message = '';
-      this.success.message = '';
+  clickBtnSetUrl(ev: any): void {
+    // console.log('clickBtnSetUrl', ev.target);
+    // 処理中 アイコンを追加する
+    ev.target.classList.toggle('is-loading');
 
-      const target = document.getElementById('btn-set-url');
-      if (target) {
-        target.classList.remove('is-loading');
+    // URLから videoid を 抽出
+    console.log('youtube.url', this.youtube.url);
+    const parser = new URL(this.youtube.url);
+    console.log('search', parser);
+
+    this.youtube.videoid = '';
+    if (parser.searchParams.has('v') == false) {
+      // Vパラメーターがなかった
+      // スマホURL https://youtu.be/X5ACAS2KYQo
+      if (parser.hostname == 'youtu.be') {
+        this.youtube.videoid = parser.pathname.replace(/^\//,'');
       }
-    },
-    clickBtnSetUrl(ev: any) {
-      // console.log('clickBtnSetUrl', ev.target);
-      // 処理中 アイコンを追加する
-      ev.target.classList.toggle('is-loading');
-
-      // URLから videoid を 抽出
-      console.log('youtube.url', this.youtube.url);
-      const parser = new URL(this.youtube.url);
-      console.log('search', parser);
-
-      this.youtube.videoid = '';
-      if (parser.searchParams.has('v') == false) {
-        // Vパラメーターがなかった
-        // スマホURL https://youtu.be/X5ACAS2KYQo
-        if (parser.hostname == 'youtu.be') {
-          this.youtube.videoid = parser.pathname.replace(/^\//,'');
-        }
-      }
-      else {
-        this.youtube.videoid = parser.searchParams.get('v') as string;
-      }
-
-      if (this.youtube.videoid == '') {
-          this.error.message = 'videoid が 抽出できませんでした。 YouTube URLを確認してください';
-          // 処理中 アイコンを削除
-          ev.target.classList.toggle('is-loading');            
-          return;
-      }
-      console.log('this.youtube', this.youtube);
-
-      // ダウンロード処理を実行する
-      // TODO 進捗を通知する方法が必用そう
-      this.axios.get(`/api/convert/last/${this.youtube.videoid}`)
-        .then((resp) => {            
-          // 処理中 アイコンを削除
-          ev.target.classList.toggle('is-loading');
-          this.success.message = '動画が設定されました。cluster ワールドで再生してみてください';
-        })
-        .catch((e) => {
-          this.error.message = e.message;
-          // 処理中 アイコンを削除
-          ev.target.classList.toggle('is-loading');
-        });
-    },
-    clickBtnReset(ev: any) {
-      // 処理中 アイコンを追加する
-      ev.target.classList.toggle('is-loading');
-      const userid = 'dummy';
-      this.axios.get(`/${userid}/last/delete`)
-        .then((resp) => {            
-          // 処理中 アイコンを削除
-          ev.target.classList.toggle('is-loading');
-          this.success.message = '再生対象がリセットされました。再度、動画を設定してみてください';
-        })
-        .catch((e) => {
-          this.error.message = e.message;
-          // 処理中 アイコンを削除
-          ev.target.classList.toggle('is-loading');
-        });
     }
-  },
-});
+    else {
+      this.youtube.videoid = parser.searchParams.get('v') as string;
+    }
+
+    if (this.youtube.videoid == '') {
+        this.error.message = 'videoid が 抽出できませんでした。 YouTube URLを確認してください';
+        // 処理中 アイコンを削除
+        ev.target.classList.toggle('is-loading');            
+        return;
+    }
+    console.log('this.youtube', this.youtube);
+
+    // サーバ側でのダウンロード処理を実行する
+    // TODO 進捗を通知する方法が必用そう
+    this.axios.get(`/api/convert/last/${this.userid}/${this.youtube.videoid}`)
+      .then((resp) => {            
+        // 処理中 アイコンを削除
+        ev.target.classList.toggle('is-loading');
+        this.success.message = '動画が設定されました。cluster ワールドで再生してみてください';
+      })
+      .catch((e) => {
+        this.error.message = e.message;
+        // 処理中 アイコンを削除
+        ev.target.classList.toggle('is-loading');
+      });
+  }
+
+  clickBtnReset(ev: any): void {
+    // 処理中 アイコンを追加する
+    ev.target.classList.toggle('is-loading');
+    this.axios.get(`/${this.userid}/last/delete`)
+      .then((resp) => {            
+        // 処理中 アイコンを削除
+        ev.target.classList.toggle('is-loading');
+        this.success.message = '再生対象がリセットされました。再度、動画を設定してみてください';
+      })
+      .catch((e) => {
+        this.error.message = e.message;
+        // 処理中 アイコンを削除
+        ev.target.classList.toggle('is-loading');
+      });
+  }
+}
 </script>

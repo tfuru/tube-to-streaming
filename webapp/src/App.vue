@@ -2,10 +2,10 @@
   <div id="app">
     <div id="nav">
       <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link> |
+      <router-link to="/bookmarklet">ブックマークレット</router-link> |
       <button
         v-if="isLogin() == true"
-        class="button"
+        class="button is-small is-inverted"
         @click="clickLogout">ログアウト</button>
     </div>
     <router-view/>

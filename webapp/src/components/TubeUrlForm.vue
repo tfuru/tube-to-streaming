@@ -35,6 +35,9 @@
         <h2 class="subtitle">配信URL</h2>
         <p> ワールドに設置した VideoPlayer に設定するURL</p>
         <input class="input is-left" type="text" v-model="lastMp4Url" @click="clickLastMp4Url">
+        <h3>参考</h3>
+        <p><a href="https://creator.cluster.mu/2021/02/04/set-up-movie/">Video Playerを使ってワールド内に動画を設置する</a></p>
+        <p>サイトを参考に Video Player を設定して の Source に 上のURLを指定すると利用する事ができます。</p>
       </div>
     </div>
   </div>

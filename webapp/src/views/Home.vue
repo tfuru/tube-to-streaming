@@ -11,7 +11,7 @@
     </section>
 
     <section class="section">
-      <div v-if="isLogin == false">
+      <div v-if="isLogin() == false">
         <login />
       </div>
       <div v-else>
@@ -21,6 +21,7 @@
     </section>
   </div>
 </template>
+
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
@@ -43,8 +44,10 @@ import Bookmarklet from "@/components/Bookmarklet.vue";
   },  
 })
 export default class Home extends Vue {
-  isLogin(): boolean {
-    return store.getters.isSignIn;
+  isLogin() {
+    const isSignIn = store.getters.isSignIn;
+    console.log('isSignIn', isSignIn);
+    return isSignIn;
   }
 }
 </script>

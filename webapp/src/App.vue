@@ -3,7 +3,10 @@
     <div id="nav">
       <router-link to="/">Home</router-link> |
       <router-link to="/about">About</router-link> |
-      <button v-if="isLogin == true" class="button" @click="clickLogout">ログアウト</button>
+      <button
+        v-if="isLogin() == true"
+        class="button"
+        @click="clickLogout">ログアウト</button>
     </div>
     <router-view/>
   </div>
@@ -43,29 +46,13 @@ import firebase from "@/plugins/firebase";
 @Component({})
 export default class App extends Vue {
   isLogin() {
-    return store.getters.isSignIn;
+    const isSignIn = store.getters.isSignIn;
+    console.log('isSignIn', isSignIn);
+    return isSignIn;
   }
 
   clickLogout() {
     firebase.signOut();
   }
 }
-
-/*
-export default Vue.extend({
-  name: "App",
-  data: () => ({
-    //
-  }),
-  computed: {
-    isLogin() {
-      return store.getters.isSignIn;
-    },
-  },
-  methods: {
-
-  },
-});
-*/
-
 </script>

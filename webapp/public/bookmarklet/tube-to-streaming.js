@@ -6,9 +6,12 @@ javascript:(async () => {
         return null;
     }
     const videoid = url.searchParams.get('v');
+    const userid = 'dummy';
     
     console.log('videoid', videoid);
-    const apiUrl = `https://tube-to-streaming.an.r.appspot.com/api/convert/last/${videoid}`;
+    console.log('userid', userid);
+
+    const apiUrl = `https://tube-to-streaming.an.r.appspot.com/api/convert/last/${userid}/${videoid}`;
     console.log('apiUrl', apiUrl);
     const response = await fetch(apiUrl);
     console.log('response', response);

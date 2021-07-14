@@ -33,11 +33,11 @@
     <div v-if="userid != 'dummy'" class="columns">
       <div class="column content">
         <h2 class="subtitle">配信URL</h2>
-        <p> ワールドに設置した VideoPlayer に設定するURL</p>
+        <p> ワールドに設置した Video Player に設定するURL</p>
         <input class="input is-left" type="text" v-model="lastMp4Url" @click="clickLastMp4Url">
         <h3>参考</h3>
         <p><a href="https://creator.cluster.mu/2021/02/04/set-up-movie/">Video Playerを使ってワールド内に動画を設置する</a></p>
-        <p>サイトを参考に Video Player を設定して の Source に 上のURLを指定すると利用する事ができます。</p>
+        <p>サイトを参考に Video Player を設定して の Source 欄に<br /> 上のテキストボックスのURLを指定すると利用する事ができます。</p>
       </div>
     </div>
   </div>

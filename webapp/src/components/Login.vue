@@ -1,10 +1,14 @@
 <template>
   <div class="container">
-    <div id="firebaseui-auth-container"></div>
-    <div> &nbsp; </div>
-    <button class="button" @click="clickBtnAnonymously">
+    <h3 class="subtitle">アカウントを作らず利用する</h3>
+    <p><a href="https://cluster.mu/w/e10c8416-6f4c-4f91-a606-2b07441a0583">動画を中継するツールをつくってみた</a>ワールドで<br />試すことができます。</p>
+    <button class="button is-link" @click="clickBtnAnonymously">
       アカウントを作らずに利用する
     </button>
+    <div> &nbsp; </div>
+    <h3 class="subtitle">アカウント登録して利用する</h3>
+    <p>自分のワールドに組み込んで使う事ができるようになります。</p>    
+    <div id="firebaseui-auth-container"></div>
   </div>
 </template>
 

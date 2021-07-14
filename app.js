@@ -124,6 +124,10 @@ const mp4download = async (videoid, path) => {
   });
 }
 
+app.get('/last', (req, res) => {
+  res.redirect("/dummy/last");
+});
+
 app.get('/:userid/last', (req, res) => {
   const lastPath = careteTmpDirLastFilePath(req.params.userid);
   const exists = fs.existsSync(lastPath.path);

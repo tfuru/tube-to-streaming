@@ -17,11 +17,12 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-response-range": "^0.2.11",
+    "ffmpeg": "^0.0.4",
     "fs": "^0.0.1-security",
     "fs-extra": "^10.0.0",
     "http": "^0.0.1-security",
     "md5": "^2.3.0",
     "stream-slice": "^0.1.2",
-    "ytdl-core": "^4.8.3"
+    "ytdl-core": "^4.9.1"
   }
 }

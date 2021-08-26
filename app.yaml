@@ -6,6 +6,11 @@ automatic_scaling:
   max_idle_instances: 1
   max_instances: 1
 
+# instance_class: B1
+# basic_scaling:
+#  max_instances: 1
+#  idle_timeout: 5m
+
 handlers:
 - url: /css
   static_dir: webapp/dist/css

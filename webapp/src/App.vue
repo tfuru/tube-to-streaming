@@ -1,8 +1,10 @@
 <template>
   <div id="app">
     <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/bookmarklet">ブックマークレット</router-link> |
+      <router-link to="/">Home</router-link>
+      <p v-if="isLogin() == true" class="spacer"></p>
+      <router-link v-if="isLogin() == true" to="/bookmarklet">ブックマークレット</router-link>
+      <p v-if="isLogin() == true" class="spacer"></p>
       <button
         v-if="isLogin() == true"
         class="button is-small is-inverted"
@@ -35,6 +37,12 @@
     }
   }
 }
+
+.spacer {
+  display: inline-block;
+  width: 10px;
+}
+
 </style>
 
 <script lang="ts">
@@ -47,7 +55,7 @@ import firebase from "@/plugins/firebase";
 export default class App extends Vue {
   isLogin() {
     const isSignIn = store.getters.isSignIn;
-    console.log('isSignIn', isSignIn);
+    // console.log('isSignIn', isSignIn);
     return isSignIn;
   }
 

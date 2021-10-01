@@ -28,6 +28,7 @@
           <p class="spacer"></p>
           <button id="btn-set-url" class="button" @click="clickBtnReset">リセット</button>
         </div>
+        <!--
         <div class="field is-horizontal">
           <label class="label">時間指定</label>
           <p class="spacer"></p>
@@ -35,6 +36,7 @@
           <p class="spacer">-</p>
           <input class="input is-left range" type="text" placeholder="例) 01:00" v-model="youtube.range.end">
         </div>
+        -->
       </div>
     </div>
     <div v-if="userid != 'dummy'" class="columns">
@@ -89,8 +91,8 @@ export default class TubeUrlForm extends Vue {
     url: 'https://www.youtube.com/watch?v=dzQIMo-Xvyg',
     videoid: '',
     range: {
-      start: "01:00", 
-      end: "2:30",
+      start: "00:00", 
+      end: "00:00",
     }
   };
 

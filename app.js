@@ -7,7 +7,10 @@ const express = require('express');
 const cors = require('cors');
 const responseRange = require('express-response-range');
 const slice = require('stream-slice').slice;
-const ffmpeg = require('ffmpeg');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+ffmpeg.setFfmpegPath(ffmpegPath);
+// console.info('process.env', process.env);
 
 const app = express();
 app.use(express.static('./webapp/dist'));
@@ -15,10 +18,8 @@ app.use(responseRange({defaultLimit: 1024 * 1024}));
 app.use(cors());
 app.use(express.json());
 
-// タイムアウト時間
+// タイムアウト時間 5分
 const SERVER_TIMEOUT_MSEC = 5 * 60 * 1000;
-// 最大ダウンロードファイルサイズ 100MB 5分
-const MAX_FILE_SIZE = 1000 * 1024 * 1024;
 
 const careteTmpDirFilePath = (userid, videoid) => {
   const identifier = md5(videoid);
@@ -48,57 +49,13 @@ const careteTmpDirLastFile = (userid, path) => {
   });
 }
 
-// Range指定で last ファイルを作成する
-const careteRangeTmpDirLastFile = (userid, path, options) => {
-  console.log('careteRangeTmpDirLastFile', userid, path, options);
-  // 指定時間を切り出し
-  // https://www.dev-dev.net/entry/2018/04/18/154731
-  return new Promise((resolve, reject) => {
-    const process = new ffmpeg(path);
-    process.then(
-      (video) => {
-        const lastFilePath = careteTmpDirLastFilePath(userid);
-        const exists = fs.existsSync(lastFilePath.path);
-        if (exists == true) {
-          // 既に last ファイルが有った場合 削除
-          fs.unlinkSync(lastFilePath.path);
-        }
-
-        // console.log('video', video);
-        const ss = options.range.start;
-        const t = options.range.end - options.range.start;
-        console.log(`ss ${ss} t ${t}`);
-
-        video.addCommand('-ss', `${ss}`);
-        video.addCommand('-t', `${t}`);
-        // video.addCommand('-c:v', 'copy');
-        // video.addCommand('-c:a', 'copy');
-        video.addCommand('-f', 'mp4');
-        video.save(lastFilePath.path, (error, file) => {
-          if (error) {
-            console.error('error' + error);
-            reject(error);
-            return
-          }
-          console.log('Video file: ' + file);
-          resolve();
-        });
-      },
-      (error) => {
-        console.error('error', error);
-        reject(error);
-      }
-    );
-  })
-}
-
 const mp4response = (path, mime, req, res) => {
   // console.log('mp4response');
   console.log(' headers.range', req.headers.range);
   console.log(' req.range', req.range);
 
   const stat = fs.statSync(path);
-  const tmpDirFile = fs.createReadStream( path );
+  const tmpDirFile = fs.createReadStream( path, {flags: 'rs+'} );
   tmpDirFile.on('error', (error) => {
       console.error(`${error}`);
       res.writeHead(500, {'Content-Type' : 'text/plain'});
@@ -129,190 +86,120 @@ const mp4response = (path, mime, req, res) => {
     'Content-Type': 'video/mp4',
     'Content-Length': stat.size
   }
+  console.log('headers', headers);
   res.writeHead(200, headers);
   tmpDirFile.pipe(res);
 }
 
-const mp4download = async (videoid, path) => {
-  return new Promise(async (resolve, reject) => {
-    // ファイルがダウンロードされてない場合は ダウンロードする
-    const info = await ytdl.getInfo(videoid);
-    // console.log('video info.formats', info.formats);
-    const formats = info.formats.filter((f) => (f.hasVideo == true && f.hasAudio == true));
-    if (formats == null) {
-      // フォーマット不明
-      reject({message:'format is null.'});
-      return;
-    }
-    // console.log('video formats', formats[0]);
-    if (formats[0].isLive) {
-      // ライブ配信 の場合
-      reject({message:'live is not supported'});
-      return;
-    }
+// B1 等 利用時
+app.get('/_ah/start', (req, res) => {
+  res.status(200).send('').end();
+});
 
-    const format = (info.formats.length > 0) ? ytdl.chooseFormat(info.formats, { quality: formats[0].itag }) : null;
-    const options = {
-      format: format,
-    }
-    const stream = ytdl(`http://www.youtube.com/watch?v=${videoid}`, options);
-    stream.on('progress', (chunkLength, downloaded, total) => {
-      // console.log('progress', downloaded, total);
-      if (downloaded >= MAX_FILE_SIZE) {
-        // 指定サイズ ダウンロード終了
-        stream.destroy();
-        resolve();
-      }
-    });
-
-    stream.on('data', (chunk) => {
-      // console.log('data', chunk.length);
-    });
-
-    stream.on('end', () => {
-      console.log('end', videoid);
-      // ダウンロード終了
-      resolve();
-    });
-
-    stream.on('error', err => {
-      console.error(err);
-      // エラー発生
-      reject(err);
-    });
-
-    // /temp に mp4 ファイルをダウンロードする
-    stream.pipe( fs.createWriteStream( path ) );    
-  });
-}
+app.get('/_ah/stop', (req, res) => {
+  res.status(200).send('').end();
+});
 
 app.get('/last', (req, res) => {
   res.redirect("/dummy/last");
 });
 
 app.get('/:userid/last', (req, res) => {
-  const lastPath = careteTmpDirLastFilePath(req.params.userid);
-  const exists = fs.existsSync(lastPath.path);
-
+  const userid = req.params.userid;
+  const path = process.env[`LAST_${userid}`];
+  const exists = fs.existsSync( path );
   if (exists == true) {
     // 既にファイルが有った場合
-    mp4response(lastPath.path, 'video/mp4', req, res);
+    mp4response(path, 'video/mp4', req, res);
   }
   else {
     res.writeHead(404, {'Content-Type' : 'text/plain'});
-    res.write('Not Found');
+    res.write(`Not Found ${path}`);
     res.end();
   }
 });
 
 // ファイル削除 API
 app.get('/:userid/last/delete', (req, res) => {
-  const lastPath = careteTmpDirLastFilePath(req.params.userid);
-  const exists = fs.existsSync(lastPath.path);
+  const userid = req.params.userid;
+  const path = process.env[`LAST_${userid}`];
+  const exists = fs.existsSync(path);
 
   if (exists == true) {
     // 既にファイルが有った場合
-    fs.unlinkSync(lastPath.path);
+    fs.unlinkSync(path);
   }
+  // ダウンロード処理をキャンセルする
+  process.env[`DL_CANCEL_${userid}`] = true;
 
   res
     .status(200)
-    .json({status: "ok", message: "deleted the file.", path: lastPath.path});
+    .json({status: "ok", message: "deleted the file.", path: path});
 });
 
 // 指定IDの動画を変換
-const convert = (userid, videoid, res, options = {}) => {
+const convert = async (userid, videoid, res, options = {}) => {
   const tmpDirFilePath = careteTmpDirFilePath(userid, videoid);
-  let exists = fs.existsSync(tmpDirFilePath.path);
-  // console.log('req videoid', videoid);
-  if (exists == true) {
-    // 既にファイルが有った場合
-    if ('range' in options) {
-      // TODO options 時間指定で 切り抜く
-      careteRangeTmpDirLastFile(userid, tmpDirFilePath.path, options)
-      .then(() => {
-        res
-          .status(200)
-          .json({
-            status: "success",
-            identifier: tmpDirFilePath.identifier
-          });
-      })
-      .catch((err) => {
-        console.error('careteTmpDirLastFile', err);
-        res
-          .status(500)
-          .json({status: "error", error: err});
-      });
-      return;
-    }    
-    // last.mp4 を生成する
-    careteTmpDirLastFile(userid, tmpDirFilePath.path)
-      .then(() => {
-        res
-          .status(200)
-          .json({ 
-            status: "success",
-            identifier: tmpDirFilePath.identifier,
-          });
-      })
-      .catch((err) => {
-        res
-          .status(500)
-          .json({status: "error", error: err});
-      });
-  }
-  else {
-    console.log('download videoid', videoid);
-    console.log('tmpDirFilePath', tmpDirFilePath.path);
-    console.log('options', options);
 
-    // YouTubeからのファイルダウンロード処理
-    mp4download(videoid, tmpDirFilePath.path)
-      .then(() => {        
-        if ('range' in options) {
-          // TODO options 時間指定で 切り抜く
-          careteRangeTmpDirLastFile(userid, tmpDirFilePath.path, options)
-          .then(() => {
-            res
-              .status(200)
-              .json({
-                status: "success",
-                identifier: tmpDirFilePath.identifier
-              });
-          })
-          .catch((err) => {
-            console.error('careteTmpDirLastFile', err);
-            res
-              .status(500)
-              .json({status: "error", error: err});
-          });
-          return;
-        }
-        // ダウンロード成功 last.mp4 を生成する
-        careteTmpDirLastFile(userid, tmpDirFilePath.path)
-          .then(() => {
-            res
-              .status(200)
-              .json({
-                status: "success",
-                identifier: tmpDirFilePath.identifier
-              });
-          })
-          .catch((err) => {
-            console.error('careteTmpDirLastFile', err);
-            res
-              .status(500)
-              .json({status: "error", error: err});
-          });
-      })
-      .catch((err) => {
-        console.error('mp4download', err);
-        res
-          .status(500)
-          .json({status: "error", error: err});
-      });
+  const lastFilePath = careteTmpDirLastFilePath(userid);
+  const exists = fs.existsSync(lastFilePath.path);
+  if (exists == true) {
+    // 既に last ファイルが有った場合 削除
+    fs.unlinkSync(lastFilePath.path);
   }
+
+  const info = await ytdl.getInfo(videoid);
+  console.log('formats', info.formats);
+  process.env[`IS_LIVE_${userid}`] = info.formats[0].isLive;
+
+  // const formats = info.formats.filter((f) => (f.hasVideo == true && f.hasAudio == true));
+  // const format = (info.formats.length > 0) ? ytdl.chooseFormat(info.formats, { quality: formats[0].itag }) : null;
+  const formats = info.formats.filter((f) => (f.container === 'mp4'));
+  const format = formats[0];
+  const op = {
+    format: format,
+  }
+  console.log('container', format.container);
+  console.log('IS_LIVE', process.env[`IS_LIVE_${userid}`]);
+
+  // /:userid/last の為に 環境変数 LAST に ファイルパスを書き込む
+  process.env[`LAST_${userid}`] = tmpDirFilePath.path;
+  process.env[`DL_CANCEL_${userid}`] = false;
+
+  const stream = ytdl(`http://www.youtube.com/watch?v=${videoid}`, op);
+  stream.on('progress', (chunkLength, downloaded, total) => {
+    console.log('progress1', downloaded, total);
+    if (process.env[`DL_CANCEL_${userid}`] == true) {
+      // ダウンロードキャンセル
+      console.log('DOWNLOAD CANCEL');
+      stream.destroy();
+    }
+  });
+  
+  // そのまま出力
+  stream.pipe( fs.createWriteStream(`${tmpDirFilePath.path}`) );
+
+  /*
+  process.env.LAST = lastFilePath.path;
+  // ライブの場合 mp4 にコンバートする
+  ffmpeg({source: stream})
+    .on('progress', (progress) => {
+      console.log('progress2', progress);
+    })
+    .videoCodec('copy')
+    .audioCodec('copy')
+    .format('mp4')
+    .save(lastFilePath.path);
+  */
+  
+  // 変換処理がおわるまでディレイ追加
+  setTimeout(() =>{
+    res.status(200)
+    .json({ 
+      status: "success",
+      identifier: tmpDirFilePath.identifier,
+    });
+  }, 30 * 1000);
 }
 
 app.post('/api/convert/last/:userid/:videoid', (req, res) => {
@@ -337,43 +224,6 @@ app.get('/api/convert/last/:userid/:videoid', (req, res) => {
   }
   req.setTimeout(0);
   convert(req.params.userid, req.params.videoid, res)
-});
-
-app.get('/:userid/:videoid', async (req, res) => {
-  if (req.params.videoid == '' 
-    || req.params.videoid == 'favicon.ico' 
-    || req.params.videoid == 'start'
-    || req.params.videoid == 'stop') {
-    res.writeHead(404, {'Content-Type' : 'text/plain'});
-    res.write('videoid not found');
-    res.end();
-    return;
-  }
-
-  const tmpDirFilePath = careteTmpDirFilePath(req.params.userid, req.params.videoid);
-  const exists = fs.existsSync(tmpDirFilePath.path);
-  console.log('req videoid', req.params.videoid);
-
-  if (exists == true) {
-    // 既にファイルが有った場合
-    mp4response(tmpDirFilePath.path, 'video/mp4', req, res);
-  }
-  else {
-    console.log('download videoid', req.params.videoid);
-
-    // YouTubeからのファイルダウンロード処理
-    mp4download(req.params.videoid, tmpDirFilePath.path)
-      .then(() => {
-        // ダウンロードしたファイルを出力
-        mp4response(tmpDirFilePath.path, 'video/mp4', req, res);
-      })
-      .catch((err) => {
-        console.error('mp4download', err);
-        res.writeHead(500, {'Content-Type' : 'text/plain'});
-        res.write(`500 error ${err}`);
-        res.end();
-      });
-  }
 });
 
 // cron ダミー実行
